@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 	char TAAM[][15] = {
 		"pc", // 0x00200
 		"base", // 0x00400
-		"absolute" // ? direct? // bp == 0x000000 ?
+		"absolute" // ? direct? // bp == 0x000000 ?	// rubric says this is correct
 	};
 
 	//
