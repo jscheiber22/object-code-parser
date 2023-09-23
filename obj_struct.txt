@@ -1,2 +1,2 @@
 INSTR FORMAT OAT TAAM OBJ
-ADDR 0
+LDA 3 simple pc
