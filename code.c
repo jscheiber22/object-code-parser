@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 	printf("obj code len %X\n", objCodeLength);
 	// objCodeLength * 2 bc for ex, 28bytes / 3 bytes per word * 6 bits per hex = 28/3*6 = 28*2 :)
 	for (int i = 9; i <= 9 + (objCodeLength * 2); i += 6) {
-		strncpy(to, line+i, 6);
+		strncpy(to, line+i, 8);
 		long a = strtol(to, NULL, 16);
 		a >>= 4;
 		printf("a %X\n", a);
