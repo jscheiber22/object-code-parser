@@ -10,7 +10,7 @@
 // Prototypes
 int opCodeText(int opCode, int lengthOfLists, int operations[][1]);
 int getTAAM(int bp);
-int getOAT(int ni);
+int getOAT(int ni, int format);
 int doTheThing(long a);
 
 
@@ -66,18 +66,33 @@ int getTAAM(int bp){
 }
 
 
-int getOAT(int ni){
-	int n = 0x020000;
-	int i = 0x010000;
-	if (((ni & i) == i) && ((ni & n) == n)) { // simple
-		return 2;
-	} else if ((ni & n) == n) { // indirect
-		return 3;
-	} else if ((ni & i) == i) { // immediate
-		return 0;
-	} else { // also simple (both n and i are 0)
-		return 2;
+int getOAT(int ni, int format){
+	printf("%d\n", format);
+	int n, i, both;
+	if (format == 3){
+		n = 0x020000;
+		i = 0x010000;
+		both = 0x030000;
+	} else {
+		n = 0x02000000;
+		i = 0x01000000;
+		both = 0x03000000;
 	}
+
+	// printf("ni %X\n", ni);
+	// printf("n %X\n", n);
+	// printf("i %X\n", i);
+	
+	if (ni == both) { // simple
+		return 2;
+	} else if (ni == n) { // indirect
+		return 3;
+	} else if (ni == i) { // immediate
+		return 0;
+	}
+	// else { // also simple (both n and i are 0)
+	// 	return 2;
+	// }
 }
 
 int opCodeText(int opCode, int lengthOfLists, int operations[][1]) {
@@ -189,7 +204,7 @@ int doTheThing(long a){
 		}
 	}
 
-	printf("a for %X\n", a);
+	// printf("a for %X\n", a);
 
 	// int objValue = 0x0;
 	// if (format == 2){
@@ -204,6 +219,7 @@ int doTheThing(long a){
 	// 	// objValue = a & 0x000FFFFF;
 	// }
 
+	// defualts to blank spaces for formatting
 	int OATIndex = 4;
 	int TAAMIndex = 6;
 
@@ -219,13 +235,13 @@ int doTheThing(long a){
 		int x = 0x008000;
 		int e = 0x001000;
 	
-		OATIndex = getOAT(a & ni);
+		OATIndex = getOAT(a & ni, format);
 		//printf("TAAM: %s\n", OAT[0]);
 		TAAMIndex = getTAAM(a & bp);
 		if ((OATIndex == 2) && ((a & x) == x)) { TAAMIndex += 3; } // if simple and x = 1, make it indexed
 	} else if (format == 4){
 		int ni = 0x03000000;
-		OATIndex = getOAT(a & ni);
+		OATIndex = getOAT(a & ni, format);
 		TAAMIndex = 2; // always absolute for format 4
 	}
 
