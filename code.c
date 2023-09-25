@@ -1,3 +1,7 @@
+// James Scheiber
+// RedID: 825617332
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +17,7 @@ int doTheThing(long a);
 // Main function
 int main(int argc, char *argv[]) {
 
-	// //printf("%s", argv[1]); # prints filename of input file
+	// printf("%s", argv[1]); # prints filename of input file
 
 	char header[] = "INSTR FORMAT OAT TAAM OBJ";
 	FILE *outFile;
@@ -81,7 +85,8 @@ int opCodeText(int opCode, int lengthOfLists, int operations[][1]) {
 	for (int i = 0; i < lengthOfLists - 1; i++) {
 //		printf("operat: %X\n", *operations[i]);
 		if (opCode == *operations[i]) {
-//			printf("operat: %X\n", *operations[i]);
+			// printf("opcode: %X\n", opCode);
+			// printf("operat: %X\n", *operations[i]);
     			//return *operations[i];
 			return i;
 		}
@@ -145,7 +150,7 @@ int doTheThing(long a){
 		"pc_indexed",
 		"base_indexed", 
 		"absolute_indexed",
-		""
+		"    "
 	};
 
 	// immediate/simple	(how used)
@@ -154,35 +159,55 @@ int doTheThing(long a){
 		"", // this space has to be here or it combines elements 0 and 1 :/
 		"simple", // else bc ni both = 0 or 1
 		"indirect", // (ni == 0x020000)
-		""
+		"    "
 	};
 
+	int opCode;
 
-	int opCode = a & 0xFC0000;
-	// opCode = 0x90;
+	if (a <= 0xFFFF){
+		opCode = a & 0xFC00;
+		opCode >>= 8;
+	} else {
+		opCode = a & 0xFC000000;
+		opCode >>= 24;
+	}
 
 	indexOfEverything = opCodeText(opCode, lengthOfLists, operations);
 
-	printf("opcode: %X\n", opCode);	
-	//printf("operat: %X\n", *operations[0]);
-	//printf("operat: %X\n", 0xB8);
+	printf("opcode: %X\n", opCode);
 
-	// spot for finding format, should divide length of data by 8, then value will == format
+	// spot for finding format
 	if (*isFormat2[indexOfEverything]) {
-		printf("%d\n", *isFormat2[indexOfEverything]);
-		format = 2;	
+		// printf("%d\n", *isFormat2[indexOfEverything]);
+		format = 2;
 	} else {
-		if (a & 0x001000) { // just checks e
+		if (a & 0x00100000) { // just checks e
 			format = 4;
 		} else {
 			format = 3;
+			a >>= 8;
 		}
 	}
 
-	int OATIndex = -1;
-	int TAAMIndex = -1;
+	printf("a for %X\n", a);
 
-	if (format != 2){
+	// int objValue = 0x0;
+	// if (format == 2){
+	// 	// objValue = a & 0x00FF0000;
+	// 	// objValue >>= 16;
+	// 	a >>= 24;
+	// } else if (format == 3){
+	// 	// objValue = a & 0x000FF000;
+	// 	// objValue >>= 12;
+	// 	a >>= 8;
+	// } else { // format 4
+	// 	// objValue = a & 0x000FFFFF;
+	// }
+
+	int OATIndex = 4;
+	int TAAMIndex = 6;
+
+	if (format == 3){
 		// OAT - immedaite/simple - how ta is used - addrmode, based on ni
 		int n = 0x020000;
 		int i = 0x010000;
@@ -198,17 +223,10 @@ int doTheThing(long a){
 		//printf("TAAM: %s\n", OAT[0]);
 		TAAMIndex = getTAAM(a & bp);
 		if ((OATIndex == 2) && ((a & x) == x)) { TAAMIndex += 3; } // if simple and x = 1, make it indexed
-	}
-
-	int objValue = 0x0;
-	if (format == 2){
-		objValue = a & 0x00FF0000;
-		objValue >>= 16;
-	} else if (format == 3){
-		objValue = a & 0x000FF000;
-		objValue >>= 12;
-	} else { // format 4
-		objValue = a & 0x000FFFFF;
+	} else if (format == 4){
+		int ni = 0x03000000;
+		OATIndex = getOAT(a & ni);
+		TAAMIndex = 2; // always absolute for format 4
 	}
 
 
@@ -216,12 +234,16 @@ int doTheThing(long a){
     outFile = fopen("obj_struct.txt", "a+");
 	// fprintf(outFile, "%s\n", header);
 	// fprintf(outFile, "%X\n", opCodeText(opCode, lengthOfLists, operations));
-	fprintf(outFile, "%s %d %s %s %X\n", abbrev[indexOfEverything], format, OAT[OATIndex], TAAM[TAAMIndex], objValue);
+	// fprintf(outFile, "%s %d %s %s %X\n", abbrev[indexOfEverything], format, OAT[OATIndex], TAAM[TAAMIndex], objValue);
+	fprintf(outFile, "%s    %d      %s    %s    %X\n", abbrev[indexOfEverything], format, OAT[OATIndex], TAAM[TAAMIndex], a);
 	fclose(outFile);
 
 	if (format == 4){
 		return 2;
-	} else {
+	} else if (format == 3) {
 		return 0;
-	}
+	} 
+	// else {
+	// 	return -2;
+	// }
 }
