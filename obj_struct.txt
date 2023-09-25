@@ -1,2 +1,11 @@
 INSTR FORMAT OAT TAAM OBJ
+ADDF 3 immediate absolute
 LDA 3 simple pc
+ADDF 4 immediate absolute
+ADDF 4 immediate absolute
+ADDF 4 simple absolute
+LDA 3 simple pc
+ADDF 4 simple pc
+ADDF 3 simple absolute
+ADDF 4 indirect pc
+LDA 3 simple absolute
