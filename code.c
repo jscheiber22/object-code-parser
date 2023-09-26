@@ -11,7 +11,6 @@
 int opCodeIndex(int opCode, int lengthOfLists, int operations[][1]);
 int getTAAM(int bp);
 int getOAT(int ni, int format);
-int doTheThing(long instruction) ;
 
 
 // Main function
@@ -19,12 +18,13 @@ int main(int argc, char *argv[]) {
 
 	// kill the program if a file is not provided
 	if (argc < 2){
-		printf("No filename provided in command execution. Exiting.");
+		printf("No filename provided in command execution. Exiting.\n");
 		return -1;
 	}
 
 	int lengthOfLists = 59;
-	int indexOfEverything, format, opCode;
+	int indexOfEverything, format;
+	unsigned int opCode;
 
 	// Lists of data to help assign values
 	int operations[][1] = {
@@ -106,13 +106,32 @@ int main(int argc, char *argv[]) {
 			objCodeLength >>= 16; // bit shift to keep proper length
 
 			// objCodeLength * 2 bc for ex, 28bytes / 3 bytes per word * 6 bits per hex = 28/3*6 = 28*2 :)
+			// The main for loop that moves through each line instruction by instruction
 			for (int i = 9; i <= 9 + (objCodeLength * 2); i += 6) {
-				strncpy(to, line+i, 8);
+				// A bit of logic to test if the remainder of the line has enough hex values to grab 8 more.
+				// if not, it just grabs the remaining values
+				if (i + 8 <= 9 + (objCodeLength * 2)){
+					strncpy(to, line+i, 8);
+				} else {
+					strcpy(to, &line[i]);
+				}
 				long instruction = strtol(to, NULL, 16);
-				// bitshift to make sure trailing values are correct
+				if (instruction == 0){
+					break; 
+				}
+
+				// calculate the length of the hex value for more accurate calculations
+				char hex_string[10];
+    			snprintf(hex_string, sizeof(hex_string), "%X", instruction);
+				int num_hex_digits = strlen(hex_string);
+
+				// take care of some edge cases like having length of < 8  and find the opcode
 				if (instruction <= 0xFFFF){
 					opCode = instruction & 0xFC00;
 					opCode >>= 8;
+				} else if (num_hex_digits == 6){
+					opCode = instruction & 0xFC0000;
+					opCode >>= 16;
 				} else {
 					opCode = instruction & 0xFC000000;
 					opCode >>= 24;
@@ -124,14 +143,20 @@ int main(int argc, char *argv[]) {
 				// code for finding format based on given list and the value of e
 				if (*isFormat2[indexOfEverything]) {
 					format = 2;
+					if (num_hex_digits > 4){
+						instruction >>= (num_hex_digits - 4) * 4; // remove extra digits
+					}
 				} else {
-					if (instruction & 0x00100000) { // 0x00100000 = e
+					if (num_hex_digits == 6){ // must be format 3 if < 8 digits
+							format = 3;
+					} else if (instruction & 0x00100000) { // 0x00100000 = e for format 4
 						format = 4;
 					} else {
 						format = 3;
 						instruction >>= 8;
 					}
 				}
+				
 
 				// defualts to blank space index of list for formatting
 				int OATIndex = 4;
@@ -154,15 +179,25 @@ int main(int argc, char *argv[]) {
 				}
 
 
-				FILE *outFile;
-				outFile = fopen("obj_struct.txt", "a+");
-				fprintf(outFile, "%s    %d      %s    %s    %X\n", abbrev[indexOfEverything], format, OAT[OATIndex], TAAM[TAAMIndex], instruction) ;
-				fclose(outFile);
-
+				// Writes line of data to output file depending on format so that preceeding zeros are correct in number
 				if (format == 4){
+					FILE *outFile;
+					outFile = fopen("obj_struct.txt", "a+");
+					fprintf(outFile, "%s    %d      %s    %s    %08X\n", abbrev[indexOfEverything], format, OAT[OATIndex], TAAM[TAAMIndex], instruction) ;
+					fclose(outFile);
 					i += 2;
 				} else if (format == 3) {
+					FILE *outFile;
+					outFile = fopen("obj_struct.txt", "a+");
+					fprintf(outFile, "%s    %d      %s    %s    %06X\n", abbrev[indexOfEverything], format, OAT[OATIndex], TAAM[TAAMIndex], instruction) ;
+					fclose(outFile);
 					i += 0;
+				} else { // format 2 by default
+					FILE *outFile;
+					outFile = fopen("obj_struct.txt", "a+");
+					fprintf(outFile, "%s    %d      %s    %s    %04X\n", abbrev[indexOfEverything], format, OAT[OATIndex], TAAM[TAAMIndex], instruction) ;
+					fclose(outFile);
+					i -= 2;
 				}
 			}
 

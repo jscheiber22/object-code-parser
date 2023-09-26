@@ -1,10 +1,12 @@
 INSTR FORMAT OAT TAAM OBJ
-LDX    3      immediate    absolute    50000
-LDA    3      simple    pc    32014
+LDX    3      immediate    absolute    050000
+LDA    3      simple    pc    032014
 LDB    4      immediate    absolute    6910178D
 ADD    3      simple    pc_indexed    1BA010
 ADD    3      simple    base_indexed    1BC000
 TIX    3      simple    pc    2F2007
 JLT    3      simple    pc    3B2FF4
-STA    4      simple    absolute    F102EFD
+STA    4      simple    absolute    0F102EFD
 ADDR    2                      9041
+COMPR    2                      A015
+JLT    3      simple    pc    3B2FF0
