@@ -17,6 +17,10 @@ int doTheThing(long a);
 // Main function
 int main(int argc, char *argv[]) {
 
+	if (argc < 2){
+		return -1;
+	}
+
 	// printf("%s", argv[1]); # prints filename of input file
 
 	char header[] = "INSTR FORMAT OAT TAAM OBJ";
@@ -26,28 +30,37 @@ int main(int argc, char *argv[]) {
 	fclose(outFile);
 
 
-	// int a = 0x032600;
-	char* line = "T0000001C0500000320146910178D1BA0101BC0002F20073B2FF40F102EFD9041";
-	char *to = (char*) malloc(8);
-	strncpy(to, line+1, 6);
-	long startAddr = strtol(to, NULL, 16);
-	// startAddr >>= 8;
-	printf("str addr %X\n", startAddr);
-	strncpy(to, line+7, 2);
-	long objCodeLength = strtol(to, NULL, 16);
-	// objCodeLength >>= 16;
-	objCodeLength >>= 20;
-	printf("obj code len %X\n", objCodeLength);
-	// objCodeLength * 2 bc for ex, 28bytes / 3 bytes per word * 6 bits per hex = 28/3*6 = 28*2 :)
-	for (int i = 9; i <= 9 + (objCodeLength * 2); i += 6) {
-		strncpy(to, line+i, 8);
-		long a = strtol(to, NULL, 16);
-		//a >>= 4;
-		printf("a %X\n", a);
-		i += doTheThing(a);
+	FILE *inFile;
+	char line[100];
+	inFile = fopen(argv[1], "r");
+	while (fgets(line, sizeof(line), inFile)){
+		printf("%s", line);
+		if (line[0] == *"T"){
+			// int a = 0x032600;
+			// char* line = "T0000001C0500000320146910178D1BA0101BC0002F20073B2FF40F102EFD9041";
+			char *to = (char*) malloc(8);
+			strncpy(to, line+1, 6);
+			long startAddr = strtol(to, NULL, 16);
+			// startAddr >>= 8;
+			printf("str addr %X\n", startAddr);
+			strncpy(to, line+7, 2);
+			long objCodeLength = strtol(to, NULL, 16);
+			objCodeLength >>= 16;
+			// objCodeLength >>= 20;
+			printf("obj code len %X\n", objCodeLength);
+			// objCodeLength * 2 bc for ex, 28bytes / 3 bytes per word * 6 bits per hex = 28/3*6 = 28*2 :)
+			for (int i = 9; i <= 9 + (objCodeLength * 2); i += 6) {
+				strncpy(to, line+i, 8);
+				long a = strtol(to, NULL, 16);
+				//a >>= 4;
+				printf("a %X\n", a);
+				i += doTheThing(a);
+			}
+
+			free(to);
+		}
 	}
 
-	free(to);
 	return 0;
 }
 
